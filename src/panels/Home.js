@@ -14,7 +14,6 @@ import {
   ModalRoot,
   ModalPage,
   ModalPageHeader,
-  View,
   PanelHeaderButton,
   platform,
 } from "@vkontakte/vkui";
@@ -47,7 +46,7 @@ const events = {
   places: [
     {
       id: 3,
-      title: "Экскурсия по Нижегородскому Кремлю",
+      title: "Экскурсия по Эрмитажу",
       description: "Узнайте больше о шедеврах мирового искусства.",
       date: "29 ноября",
       image: "https://via.placeholder.com/150/90EE90",
@@ -105,6 +104,8 @@ export const Home = ({ id }) => {
     <ModalRoot
       activeModal={activeEvent ? "eventDetails" : null}
       onClose={() => setActiveEvent(null)}
+      // Возможно, добавьте стиль для z-index
+      style={{ zIndex: 1000 }}
     >
       {activeEvent && (
         <ModalPage
@@ -130,6 +131,8 @@ export const Home = ({ id }) => {
               {activeEvent.title}
             </ModalPageHeader>
           }
+          // Опционально: добавьте стиль для модального контента
+          style={{ zIndex: 1001 }}
         >
           <Div>
             <img
@@ -152,107 +155,105 @@ export const Home = ({ id }) => {
   );
 
   return (
-    <View activePanel={id} modal={modal}>
-      <Panel id={id}>
-        <PanelHeader>Мероприятия</PanelHeader>
+    <Panel id={id}>
+      <PanelHeader>Мероприятия</PanelHeader>
 
-        {/* Вкладки */}
-        <Tabs>
-          <TabsItem
-            onClick={() => setActiveTab("leisure")}
-            selected={activeTab === "leisure"}
-          >
-            Досуг
-          </TabsItem>
-          <TabsItem
-            onClick={() => setActiveTab("places")}
-            selected={activeTab === "places"}
-          >
-            Места
-          </TabsItem>
-          <TabsItem
-            onClick={() => setActiveTab("development")}
-            selected={activeTab === "development"}
-          >
-            Развитие
-          </TabsItem>
-        </Tabs>
+      {modal}
 
-        {/* Фильтры */}
-        <Group header={<Header mode="secondary">Фильтры</Header>}>
-          <Div>
-            <Checkbox
-              onChange={() => toggleFilter("творчество")}
-              checked={!!filters["творчество"]}
-            >
-              Творчество
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("история")}
-              checked={!!filters["история"]}
-            >
-              История
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("культура")}
-              checked={!!filters["культура"]}
-            >
-              Культура
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("образование")}
-              checked={!!filters["образование"]}
-            >
-              Образование
-            </Checkbox>
-            <Button
-              mode={showFavorites ? "primary" : "secondary"}
-              onClick={() => setShowFavorites((prev) => !prev)}
-              style={{ marginTop: "10px" }}
-            >
-              {showFavorites ? "Показать все" : "Показать избранное"}
-            </Button>
-          </Div>
-        </Group>
+      {/* Вкладки */}
+      <Tabs>
+        <TabsItem
+          onClick={() => setActiveTab("leisure")}
+          selected={activeTab === "leisure"}
+        >
+          Досуг
+        </TabsItem>
+        <TabsItem
+          onClick={() => setActiveTab("places")}
+          selected={activeTab === "places"}
+        >
+          Места
+        </TabsItem>
+        <TabsItem
+          onClick={() => setActiveTab("development")}
+          selected={activeTab === "development"}
+        >
+          Развитие
+        </TabsItem>
+      </Tabs>
 
-        {/* События */}
-        <Group header={<Header mode="secondary">События</Header>}>
-          {filteredEvents.length > 0 ? (
-            filteredEvents.map((event) => (
-              <Card
-                key={event.id}
-                style={{ margin: "8px 0" }}
-                onClick={() => setActiveEvent(event)}
+      {/* Фильтры */}
+      <Group header={<Header mode="secondary">Фильтры</Header>}>
+        <Div>
+          <Checkbox
+            onChange={() => toggleFilter("творчество")}
+            checked={!!filters["творчество"]}
+          >
+            Творчество
+          </Checkbox>
+          <Checkbox
+            onChange={() => toggleFilter("история")}
+            checked={!!filters["история"]}
+          >
+            История
+          </Checkbox>
+          <Checkbox
+            onChange={() => toggleFilter("культура")}
+            checked={!!filters["культура"]}
+          >
+            Культура
+          </Checkbox>
+          <Checkbox
+            onChange={() => toggleFilter("образование")}
+            checked={!!filters["образование"]}
+          >
+            Образование
+          </Checkbox>
+          <Button
+            mode={showFavorites ? "primary" : "secondary"}
+            onClick={() => setShowFavorites((prev) => !prev)}
+            style={{ marginTop: "10px" }}
+          >
+            {showFavorites ? "Показать все" : "Показать избранное"}
+          </Button>
+        </Div>
+      </Group>
+
+      {/* События */}
+      <Group header={<Header mode="secondary">События</Header>}>
+        {filteredEvents.length > 0 ? (
+          filteredEvents.map((event) => (
+            <Card
+              key={event.id}
+              style={{ margin: "8px 0" }}
+              onClick={() => setActiveEvent(event)}
+            >
+              <SimpleCell
+                before={<Avatar src={event.image} size={48} />}
+                description={event.date}
+                after={
+                  <Button
+                    mode={
+                      favorites.includes(event.id) ? "primary" : "secondary"
+                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(event.id);
+                    }}
+                  >
+                    {favorites.includes(event.id) ? "В избранном" : "Избранное"}
+                  </Button>
+                }
               >
-                <SimpleCell
-                  before={<Avatar src={event.image} size={48} />}
-                  description={event.date}
-                  after={
-                    <Button
-                      mode={
-                        favorites.includes(event.id) ? "primary" : "secondary"
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(event.id);
-                      }}
-                    >
-                      {favorites.includes(event.id)
-                        ? "В избранном"
-                        : "Избранное"}
-                    </Button>
-                  }
-                >
-                  {event.title}
-                </SimpleCell>
-              </Card>
-            ))
-          ) : (
-            <Div>Нет событий, соответствующих фильтрам</Div>
-          )}
-        </Group>
-      </Panel>
-    </View>
+                {event.title}
+              </SimpleCell>
+            </Card>
+          ))
+        ) : (
+          <Div>Нет событий, соответствующих фильтрам</Div>
+        )}
+      </Group>
+    </Panel>
   );
 };
 
