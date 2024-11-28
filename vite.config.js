@@ -1,13 +1,13 @@
-import { defineConfig, transformWithEsbuild } from 'vite';
-import react from '@vitejs/plugin-react';
-import legacy from '@vitejs/plugin-legacy';
+import { defineConfig, transformWithEsbuild } from "vite";
+import react from "@vitejs/plugin-react";
+import legacy from "@vitejs/plugin-legacy";
 
 function handleModuleDirectivesPlugin() {
   return {
-    name: 'handle-module-directives-plugin',
+    name: "handle-module-directives-plugin",
     transform(code, id) {
-      if (id.includes('@vkontakte/icons')) {
-        code = code.replace(/"use-client";?/g, '');
+      if (id.includes("@vkontakte/icons")) {
+        code = code.replace(/"use-client";?/g, "");
       }
       return { code };
     },
@@ -16,13 +16,13 @@ function handleModuleDirectivesPlugin() {
 
 function threatJsFilesAsJsx() {
   return {
-    name: 'treat-js-files-as-jsx',
+    name: "treat-js-files-as-jsx",
     async transform(code, id) {
       if (!id.match(/src\/.*\.js$/)) return null;
 
       return transformWithEsbuild(code, id, {
-        loader: 'jsx',
-        jsx: 'automatic',
+        loader: "jsx",
+        jsx: "automatic",
       });
     },
   };
@@ -36,14 +36,14 @@ function threatJsFilesAsJsx() {
  * The details are here: https://dev.vk.com/mini-apps/development/on-demand-resources.
  */
 export default defineConfig({
-  base: './',
+  base: "./",
 
   plugins: [
     react(),
     threatJsFilesAsJsx(),
     handleModuleDirectivesPlugin(),
     legacy({
-      targets: ['defaults', 'not IE 11'],
+      targets: ["defaults", "not IE 11"],
     }),
   ],
 
@@ -51,21 +51,21 @@ export default defineConfig({
     force: true,
     esbuildOptions: {
       loader: {
-        '.js': 'jsx',
+        ".js": "jsx",
       },
     },
   },
 
   server: {
     port: 5173,
-    host: 'localhost',
+    host: "localhost",
     hmr: {
-      protocol: 'ws',
-      host: 'localhost',
+      protocol: "ws",
+      host: "localhost",
     },
   },
 
   build: {
-    outDir: 'build',
+    outDir: "build",
   },
 });
