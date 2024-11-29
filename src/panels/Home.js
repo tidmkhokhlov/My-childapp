@@ -17,9 +17,13 @@ import {
   PanelHeaderButton,
   platform,
 } from "@vkontakte/vkui";
-import { useState } from "react";
-import PropTypes from "prop-types";
-import { Icon24Dismiss, Icon28CancelOutline } from "@vkontakte/icons";
+import { useState, useEffect } from "react";
+import {
+  Icon24Dismiss,
+  Icon28CancelOutline,
+  Icon28FavoriteOutline,
+  Icon28Favorite,
+} from "@vkontakte/icons";
 
 // Пример данных мероприятий
 const events = {
@@ -30,6 +34,7 @@ const events = {
       description:
         "Освойте основы свечеварения и сделайте свечи своими руками!",
       date: "28 ноября",
+      location: "Мило Концерт Холл",
       image: "https://via.placeholder.com/150/FFB6C1",
       category: "творчество",
     },
@@ -39,6 +44,7 @@ const events = {
       description:
         "Посмотрите видеофильм из коллекции Российской национальной библиотеки.",
       date: "28 ноября",
+      location: "Мило Концерт Холл",
       image: "https://via.placeholder.com/150/ADD8E6",
       category: "история",
     },
@@ -49,6 +55,7 @@ const events = {
       title: "Экскурсия по Эрмитажу",
       description: "Узнайте больше о шедеврах мирового искусства.",
       date: "29 ноября",
+      location: "Мило Концерт Холл",
       image: "https://via.placeholder.com/150/90EE90",
       category: "культура",
     },
@@ -59,19 +66,31 @@ const events = {
       title: "Курс по программированию для начинающих",
       description: "Сделайте первый шаг в IT!",
       date: "30 ноября",
+      location: "Мило Концерт Холл",
       image: "https://via.placeholder.com/150/FFFFE0",
       category: "образование",
     },
   ],
 };
 
+// eslint-disable-next-line react/prop-types
 export const Home = ({ id }) => {
   const [activeTab, setActiveTab] = useState("leisure"); // Активная вкладка
   const [filters, setFilters] = useState({}); // Фильтры
-  const [favorites, setFavorites] = useState([]); // Избранное
+  //const [favorites, setFavorites] = useState([]); // Избранное
+  const [favorites, setFavorites] = useState(() => {
+    // Инициализация favorites из localStorage
+    const savedFavorites = localStorage.getItem("favorites");
+    return savedFavorites ? JSON.parse(savedFavorites) : [];
+  });
   const [showFavorites, setShowFavorites] = useState(false); // Показать только избранное
   const [activeEvent, setActiveEvent] = useState(null); // Активное событие (для модалки)
   const currentPlatform = platform(); // Определяем платформу
+
+  // Сохраняем изменения избранного в localStorage
+  useEffect(() => {
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+  }, [favorites]);
 
   // Обработка избранного
   const toggleFavorite = (eventId) => {
@@ -85,10 +104,17 @@ export const Home = ({ id }) => {
   // Применение фильтров
   const filteredEvents = events[activeTab].filter((event) => {
     const isFavorite = favorites.includes(event.id);
-    const matchesFilters = Object.entries(filters).every(
-      ([key, value]) => !value || event.category === key
+
+    // Проверяем, если хотя бы один активный фильтр совпадает с категорией мероприятия
+    const matchesFilters = Object.entries(filters).some(
+      ([key, value]) => value && event.category === key
     );
-    return (!showFavorites || isFavorite) && matchesFilters;
+
+    // Возвращаем мероприятия, которые либо совпадают по фильтрам, либо находятся в избранном
+    return (
+      (!showFavorites || isFavorite) &&
+      (matchesFilters || Object.values(filters).every((value) => !value))
+    );
   });
 
   // Обработка фильтров
@@ -99,12 +125,17 @@ export const Home = ({ id }) => {
     }));
   };
 
+  // Очистка избранного
+  const clearFavorites = () => {
+    localStorage.removeItem("favorites");
+    setFavorites([]);
+  };
+
   // Модальное окно
   const modal = (
     <ModalRoot
       activeModal={activeEvent ? "eventDetails" : null}
       onClose={() => setActiveEvent(null)}
-      // Возможно, добавьте стиль для z-index
       style={{ zIndex: 1000 }}
     >
       {activeEvent && (
@@ -128,10 +159,11 @@ export const Home = ({ id }) => {
                 )
               }
             >
-              {activeEvent.title}
+              <h3 style={{ fontSize: "23px", fontStyle: "italic", margin: 0 }}>
+                {activeEvent.title}
+              </h3>
             </ModalPageHeader>
           }
-          // Опционально: добавьте стиль для модального контента
           style={{ zIndex: 1001 }}
         >
           <Div>
@@ -146,8 +178,10 @@ export const Home = ({ id }) => {
             />
             <h4>Общая информация:</h4>
             <p>{activeEvent.description}</p>
-            <h4>Дата:</h4>
-            <p>{activeEvent.date}</p>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <h4 style={{ margin: 0, marginRight: "8px" }}>Дата:</h4>
+              <p style={{ margin: 0 }}>{activeEvent.date}</p>
+            </div>
           </Div>
         </ModalPage>
       )}
@@ -216,6 +250,13 @@ export const Home = ({ id }) => {
           >
             {showFavorites ? "Показать все" : "Показать избранное"}
           </Button>
+          <Button
+            mode="secondary"
+            onClick={clearFavorites}
+            style={{ marginTop: "10px" }}
+          >
+            Очистить избранное
+          </Button>
         </Div>
       </Group>
 
@@ -223,29 +264,62 @@ export const Home = ({ id }) => {
       <Group header={<Header mode="secondary">События</Header>}>
         {filteredEvents.length > 0 ? (
           filteredEvents.map((event) => (
-            <Card
-              key={event.id}
-              style={{ margin: "8px 0" }}
-              onClick={() => setActiveEvent(event)}
-            >
+            <Card key={event.id} style={{ margin: "8px 0" }}>
               <SimpleCell
-                before={<Avatar src={event.image} size={48} />}
+                before={
+                  <Avatar
+                    src={event.image}
+                    style={{
+                      width: "300px",
+                      height: "200px",
+                      borderRadius: "12px",
+                    }}
+                  />
+                }
                 description={event.date}
                 after={
                   <Button
-                    mode={
-                      favorites.includes(event.id) ? "primary" : "secondary"
-                    }
+                    mode="tertiary"
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleFavorite(event.id);
                     }}
                   >
-                    {favorites.includes(event.id) ? "В избранном" : "Избранное"}
+                    {favorites.includes(event.id) ? (
+                      <Icon28Favorite fill="light_blue" />
+                    ) : (
+                      <Icon28FavoriteOutline />
+                    )}
                   </Button>
                 }
               >
-                {event.title}
+                <div
+                  style={{
+                    fontSize: "24px",
+                    fontStyle: "italic",
+                    fontFamily: "'Lato', sans-serif",
+                    lineHeight: "1.3",
+                  }}
+                >
+                  {event.title}
+                </div>
+                <div
+                  style={{ fontSize: "16px", color: "#888", marginTop: "8px" }}
+                >
+                  <div>{event.location}</div>
+                  <div>{event.date}</div>
+                </div>
+                {/* Кнопка "Подробнее" */}
+                <Button
+                  size="m"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveEvent(event);
+                  }}
+                  style={{ marginTop: "10px" }}
+                >
+                  Подробнее
+                </Button>
               </SimpleCell>
             </Card>
           ))
@@ -255,8 +329,4 @@ export const Home = ({ id }) => {
       </Group>
     </Panel>
   );
-};
-
-Home.propTypes = {
-  id: PropTypes.string.isRequired,
 };
