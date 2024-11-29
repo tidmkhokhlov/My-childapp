@@ -50,7 +50,7 @@ const ServiceInfo = () => (
     />
     <Div style={{ marginLeft: "10px" }}>
       <div style={{ fontSize: "18px", fontWeight: "bold", color: "#0288D1" }}>
-        Я родитель
+        Мой ребенок
       </div>{" "}
       {/* Темно-голубой для текста */}
       <div style={{ fontSize: "14px", color: "#0277BD" }}>О сервисе</div>{" "}
