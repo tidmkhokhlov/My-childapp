@@ -18,16 +18,12 @@ import {
   platform,
 } from "@vkontakte/vkui";
 import { useState, useEffect } from "react";
-<<<<<<< HEAD
-import { Icon24Dismiss, Icon28CancelOutline, Icon28FavoriteOutline, Icon28Favorite } from "@vkontakte/icons";
-=======
 import {
   Icon24Dismiss,
   Icon28CancelOutline,
   Icon28FavoriteOutline,
   Icon28Favorite,
 } from "@vkontakte/icons";
->>>>>>> 778853a4d12e4915813828e640897d0f2e4aa94b
 
 // Пример данных мероприятий
 const events = {
@@ -108,21 +104,16 @@ export const Home = ({ id }) => {
   // Применение фильтров
   const filteredEvents = events[activeTab].filter((event) => {
     const isFavorite = favorites.includes(event.id);
-<<<<<<< HEAD
-    const matchesFilters = Object.entries(filters).every(
-        ([key, value]) => !value || event.category === key
-=======
 
     // Проверяем, если хотя бы один активный фильтр совпадает с категорией мероприятия
     const matchesFilters = Object.entries(filters).some(
-      ([key, value]) => value && event.category === key
+        ([key, value]) => value && event.category === key
     );
 
     // Возвращаем мероприятия, которые либо совпадают по фильтрам, либо находятся в избранном
     return (
-      (!showFavorites || isFavorite) &&
-      (matchesFilters || Object.values(filters).every((value) => !value))
->>>>>>> 778853a4d12e4915813828e640897d0f2e4aa94b
+        (!showFavorites || isFavorite) &&
+        (matchesFilters || Object.values(filters).every((value) => !value))
     );
   });
 
@@ -142,21 +133,10 @@ export const Home = ({ id }) => {
 
   // Модальное окно
   const modal = (
-<<<<<<< HEAD
       <ModalRoot
           activeModal={activeEvent ? "eventDetails" : null}
-=======
-    <ModalRoot
-      activeModal={activeEvent ? "eventDetails" : null}
-      onClose={() => setActiveEvent(null)}
-      style={{ zIndex: 1000 }}
-    >
-      {activeEvent && (
-        <ModalPage
-          id="eventDetails"
->>>>>>> 778853a4d12e4915813828e640897d0f2e4aa94b
           onClose={() => setActiveEvent(null)}
-          style={{ zIndex: 1000}}
+          style={{ zIndex: 1000 }}
       >
         {activeEvent && (
             <ModalPage
@@ -186,7 +166,6 @@ export const Home = ({ id }) => {
                 }
                 style={{ zIndex: 1001 }}
             >
-<<<<<<< HEAD
               <Div>
                 <img
                     src={activeEvent.image}
@@ -199,47 +178,19 @@ export const Home = ({ id }) => {
                 />
                 <h4>Общая информация:</h4>
                 <p>{activeEvent.description}</p>
-                <div style={{display: "flex", alignItems: "center"}}>
-                  <h4 style={{margin: 0, marginRight: "8px"}}>Дата:</h4>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <h4 style={{ margin: 0, marginRight: "8px" }}>Дата:</h4>
+                  <p style={{ margin: 0 }}>{activeEvent.date}</p>
                 </div>
               </Div>
             </ModalPage>
         )}
       </ModalRoot>
-=======
-              <h3 style={{ fontSize: "23px", fontStyle: "italic", margin: 0 }}>
-                {activeEvent.title}
-              </h3>
-            </ModalPageHeader>
-          }
-          style={{ zIndex: 1001 }}
-        >
-          <Div>
-            <img
-              src={activeEvent.image}
-              alt={activeEvent.title}
-              style={{
-                width: "100%",
-                borderRadius: "8px",
-                marginBottom: "16px",
-              }}
-            />
-            <h4>Общая информация:</h4>
-            <p>{activeEvent.description}</p>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <h4 style={{ margin: 0, marginRight: "8px" }}>Дата:</h4>
-              <p style={{ margin: 0 }}>{activeEvent.date}</p>
-            </div>
-          </Div>
-        </ModalPage>
-      )}
-    </ModalRoot>
->>>>>>> 778853a4d12e4915813828e640897d0f2e4aa94b
   );
 
   return (
       <Panel id={id}>
-      <PanelHeader>Мероприятия</PanelHeader>
+        <PanelHeader>Мероприятия</PanelHeader>
 
         {modal}
 
@@ -265,7 +216,6 @@ export const Home = ({ id }) => {
           </TabsItem>
         </Tabs>
 
-<<<<<<< HEAD
         {/* Фильтры */}
         <Group header={<Header mode="secondary">Фильтры</Header>}>
           <Div>
@@ -303,8 +253,7 @@ export const Home = ({ id }) => {
             <Button
                 mode="secondary"
                 onClick={clearFavorites}
-                style={{ marginTop: "10px",
-                  marginLeft: "10px" }}
+                style={{ marginTop: "10px" }}
             >
               Очистить избранное
             </Button>
@@ -379,119 +328,5 @@ export const Home = ({ id }) => {
           )}
         </Group>
       </Panel>
-=======
-      {/* Фильтры */}
-      <Group header={<Header mode="secondary">Фильтры</Header>}>
-        <Div>
-          <Checkbox
-            onChange={() => toggleFilter("творчество")}
-            checked={!!filters["творчество"]}
-          >
-            Творчество
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("история")}
-            checked={!!filters["история"]}
-          >
-            История
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("культура")}
-            checked={!!filters["культура"]}
-          >
-            Культура
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("образование")}
-            checked={!!filters["образование"]}
-          >
-            Образование
-          </Checkbox>
-          <Button
-            mode={showFavorites ? "primary" : "secondary"}
-            onClick={() => setShowFavorites((prev) => !prev)}
-            style={{ marginTop: "10px" }}
-          >
-            {showFavorites ? "Показать все" : "Показать избранное"}
-          </Button>
-          <Button
-            mode="secondary"
-            onClick={clearFavorites}
-            style={{ marginTop: "10px" }}
-          >
-            Очистить избранное
-          </Button>
-        </Div>
-      </Group>
-
-      {/* События */}
-      <Group header={<Header mode="secondary">События</Header>}>
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
-            <Card key={event.id} style={{ margin: "8px 0" }}>
-              <SimpleCell
-                before={
-                  <Avatar
-                    src={event.image}
-                    style={{
-                      width: "300px",
-                      height: "200px",
-                      borderRadius: "12px",
-                    }}
-                  />
-                }
-                description={event.date}
-                after={
-                  <Button
-                    mode="tertiary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(event.id);
-                    }}
-                  >
-                    {favorites.includes(event.id) ? (
-                      <Icon28Favorite fill="light_blue" />
-                    ) : (
-                      <Icon28FavoriteOutline />
-                    )}
-                  </Button>
-                }
-              >
-                <div
-                  style={{
-                    fontSize: "24px",
-                    fontStyle: "italic",
-                    fontFamily: "'Lato', sans-serif",
-                    lineHeight: "1.3",
-                  }}
-                >
-                  {event.title}
-                </div>
-                <div
-                  style={{ fontSize: "16px", color: "#888", marginTop: "8px" }}
-                >
-                  <div>{event.location}</div>
-                  <div>{event.date}</div>
-                </div>
-                {/* Кнопка "Подробнее" */}
-                <Button
-                  size="m"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveEvent(event);
-                  }}
-                  style={{ marginTop: "10px" }}
-                >
-                  Подробнее
-                </Button>
-              </SimpleCell>
-            </Card>
-          ))
-        ) : (
-          <Div>Нет событий, соответствующих фильтрам</Div>
-        )}
-      </Group>
-    </Panel>
->>>>>>> 778853a4d12e4915813828e640897d0f2e4aa94b
   );
 };
