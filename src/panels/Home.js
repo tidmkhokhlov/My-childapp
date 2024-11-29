@@ -24,6 +24,8 @@ import {
   Icon28FavoriteOutline,
   Icon28Favorite,
   Icon24FavoriteOutline,
+  Icon24Filter,
+  Icon24Favorite,
 } from "@vkontakte/icons";
 
 // Импортируем данные для карточек
@@ -70,6 +72,8 @@ export const Home = ({ id }) => {
   });
   const [showFavorites, setShowFavorites] = useState(false); // Показать только избранное
   const [activeEvent, setActiveEvent] = useState(null); // Активное событие (для модалки)
+  const [showFilterMenu, setShowFilterMenu] = useState(false); // Показать меню фильтров
+
   const currentPlatform = platform(); // Определяем платформу
 
   // Сохраняем изменения избранного в localStorage
@@ -175,13 +179,9 @@ export const Home = ({ id }) => {
 
   return (
     <Panel id={id}>
-      <PanelHeader>Мероприятия</PanelHeader>
-
       {/* Блок "о сервисе" */}
       <ServiceInfo />
-
       {modal}
-
       {/* Вкладки */}
       <Tabs>
         <TabsItem
@@ -204,50 +204,57 @@ export const Home = ({ id }) => {
         </TabsItem>
       </Tabs>
 
-      {/* Фильтры */}
-      <Group header={<Header mode="secondary">Фильтры</Header>}>
-        <Div>
-          <Checkbox
-            onChange={() => toggleFilter("творчество")}
-            checked={!!filters["творчество"]}
-          >
-            Творчество
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("история")}
-            checked={!!filters["история"]}
-          >
-            История
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("культура")}
-            checked={!!filters["культура"]}
-          >
-            Культура
-          </Checkbox>
-          <Checkbox
-            onChange={() => toggleFilter("образование")}
-            checked={!!filters["образование"]}
-          >
-            Образование
-          </Checkbox>
-          <Button
-            mode={showFavorites ? "primary" : "secondary"}
-            onClick={() => setShowFavorites((prev) => !prev)}
-            style={{ marginTop: "10px" }}
-          >
-            {showFavorites ? "Показать все" : "Показать избранное"}
-          </Button>
-          <Button
-            mode="secondary"
-            onClick={clearFavorites}
-            style={{ marginTop: "10px", marginLeft: "10px" }}
-          >
-            Очистить избранное
-          </Button>
-        </Div>
-      </Group>
+      {/* Кнопки для показа меню фильтров и избранного */}
+      <Div style={{ display: "flex", justifyContent: "space-between" }}>
+        <Button
+          mode="primary"
+          onClick={() => setShowFilterMenu((prev) => !prev)}
+          style={{ margin: "10px 0" }}
+          before={<Icon24Filter />}
+        >
+          Фильтр
+        </Button>
+        <Button
+          mode={showFavorites ? "primary" : "secondary"}
+          onClick={() => setShowFavorites((prev) => !prev)}
+          style={{ margin: "10px 0" }}
+          before={<Icon24Favorite />}
+        >
+          {showFavorites ? "Показать все" : "Показать избранное"}
+        </Button>
+      </Div>
 
+      {/* Меню фильтров */}
+      {showFilterMenu && (
+        <Group header={<Header mode="secondary">Фильтры</Header>}>
+          <Div>
+            <Checkbox
+              onChange={() => toggleFilter("творчество")}
+              checked={!!filters["творчество"]}
+            >
+              Творчество
+            </Checkbox>
+            <Checkbox
+              onChange={() => toggleFilter("история")}
+              checked={!!filters["история"]}
+            >
+              История
+            </Checkbox>
+            <Checkbox
+              onChange={() => toggleFilter("культура")}
+              checked={!!filters["культура"]}
+            >
+              Культура
+            </Checkbox>
+            <Checkbox
+              onChange={() => toggleFilter("образование")}
+              checked={!!filters["образование"]}
+            >
+              Образование
+            </Checkbox>
+          </Div>
+        </Group>
+      )}
       {/* События */}
       <Group header={<Header mode="secondary">События</Header>}>
         {filteredEvents.length > 0 ? (
