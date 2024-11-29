@@ -83,7 +83,7 @@ export const Home = ({ id }) => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ event_ids: [42] }),
+        body: JSON.stringify({ event_ids: favorites }),
       });
 
       if (response.ok) {
@@ -97,10 +97,12 @@ export const Home = ({ id }) => {
     }
   };
 
-  // Сохраняем изменения избранного в localStorage
+  // Сохраняем изменения избранного в localStorage (уже не в localStorage;)
   useEffect(() => {
-    sendFavoritesToServer();
-  }, [favorites]);
+    if (favorites.length > 0) {
+      sendFavoritesToServer(favorites); // Передаем актуальный список favorites
+    }
+  }, [favorites]); // Вызываем, когда favorites изменяется
 
   // Обработка избранного
   const toggleFavorite = (eventId) => {
