@@ -76,14 +76,14 @@ export const Home = ({ id }) => {
 
   const currentPlatform = platform(); // Определяем платформу
 
-  const sendFavoritesToServer = async () => {
+  const sendFavoritesToServer = async (favorites_ids) => {
     try {
       const response = await fetch('http://127.0.0.1:5000/add_event_ids', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ event_ids: favorites }),
+        body: JSON.stringify({ event_ids: favorites_ids, vk_id: "@aboba" }),
       });
 
       if (response.ok) {
@@ -101,6 +101,8 @@ export const Home = ({ id }) => {
   useEffect(() => {
     if (favorites.length > 0) {
       sendFavoritesToServer(favorites); // Передаем актуальный список favorites
+    } else {
+      sendFavoritesToServer([0]);
     }
   }, [favorites]); // Вызываем, когда favorites изменяется
 
