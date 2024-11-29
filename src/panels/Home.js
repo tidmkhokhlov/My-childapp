@@ -253,7 +253,7 @@ export const Home = ({ id }) => {
             <Button
                 mode="secondary"
                 onClick={clearFavorites}
-                style={{ marginTop: "10px" }}
+                style={{ marginTop: "10px", marginLeft: "10px" }}
             >
               Очистить избранное
             </Button>
