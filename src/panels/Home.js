@@ -76,9 +76,30 @@ export const Home = ({ id }) => {
 
   const currentPlatform = platform(); // Определяем платформу
 
+  const sendFavoritesToServer = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/add_event_ids', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ event_ids: [42] }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Данные успешно отправлены на сервер:", data.message);
+      } else {
+        console.error("Ошибка при отправке данных на сервер");
+      }
+    } catch (error) {
+      console.error("Ошибка при отправке запроса:", error);
+    }
+  };
+
   // Сохраняем изменения избранного в localStorage
   useEffect(() => {
-    localStorage.setItem("favorites", JSON.stringify(favorites));
+    sendFavoritesToServer();
   }, [favorites]);
 
   // Обработка избранного
