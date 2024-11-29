@@ -166,11 +166,11 @@ export const Home = ({ id }) => {
     }));
   };
 
-  // Очистка избранного
-  const clearFavorites = () => {
-    localStorage.removeItem("favorites");
-    setFavorites([]);
-  };
+  // // Очистка избранного(old)
+  // const clearFavorites = () => {
+  //   localStorage.removeItem("favorites");
+  //   setFavorites([]);
+  // };
 
   // Модальное окно
   const modal = (

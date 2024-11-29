@@ -5,7 +5,7 @@ from flask_cors import CORS  # Импортируем CORS для обработ
 app = Flask(__name__)
 
 # Разрешаем кросс-доменные запросы с вашего фронтенд-домена
-CORS(app, origins=["https://user399570766-3syuj4lv.tunnel.vk-apps.com"])
+CORS(app)
 
 # Подключение к базе данных SQLite
 def get_db_connection():
