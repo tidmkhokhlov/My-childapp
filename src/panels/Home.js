@@ -76,6 +76,33 @@ export const Home = ({ id }) => {
 
   const currentPlatform = platform(); // Определяем платформу
 
+  const getFavoritesFromServer = async (vkId) => {
+    try {
+      // Отправляем GET-запрос на сервер для получения избранных мероприятий для данного vk_id
+      const response = await fetch(`http://127.0.0.1:5000/get_event_ids/${vkId}`, {
+        method: 'GET',
+      });
+
+      // Проверяем, был ли запрос успешным
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Избранные мероприятия для пользователя:", data);
+        setFavorites(data.event_ids);  // Возвращаем список event_ids
+      } else {
+        console.error("Ошибка при получении данных с сервера");
+        return [];
+      }
+    } catch (error) {
+      console.error("Ошибка при отправке запроса:", error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    const vkId = "@aboba";
+    getFavoritesFromServer(vkId); // Загружаем избранные мероприятия
+  }, []);
+
   const sendFavoritesToServer = async (favorites_ids) => {
     try {
       const response = await fetch('http://127.0.0.1:5000/add_event_ids', {
