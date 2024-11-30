@@ -11,70 +11,57 @@ import {
   Div,
   Checkbox,
   Button,
-  ModalRoot,
-  ModalPage,
-  ModalPageHeader,
-  PanelHeaderButton,
   platform,
 } from "@vkontakte/vkui";
 import { useState, useEffect } from "react";
 import {
-  Icon24Dismiss,
-  Icon28CancelOutline,
   Icon28FavoriteOutline,
   Icon28Favorite,
-  Icon24FavoriteOutline,
   Icon24Filter,
-  Icon24Favorite,
 } from "@vkontakte/icons";
 
-// Импортируем данные для карточек
-import events from "./eventsData";
+import events from "./eventsData"; // Импортируем события из файла events.js
 
 // Компонент "О сервисе"
 const ServiceInfo = () => (
-  <Div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      padding: "24px",
-      backgroundColor: "#E0F7FA", // Светлый голубой фон
-    }}
-  >
-    <Icon24FavoriteOutline
-      style={{
-        color: "#00B0FF", // Яркий голубой цвет иконки
-        backgroundColor: "#B3E5FC", // Легкий голубой фон вокруг иконки
-        borderRadius: "50%",
-      }}
-      width={32}
-      height={32}
-    />
-    <Div style={{ marginLeft: "10px" }}>
-      <div style={{ fontSize: "18px", fontWeight: "bold", color: "#0288D1" }}>
-        Мой ребенок
-      </div>{" "}
-      {/* Темно-голубой для текста */}
-      <div style={{ fontSize: "14px", color: "#0277BD" }}>О сервисе</div>{" "}
-      {/* Средний голубой цвет */}
+    <Div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          padding: "40px",
+          backgroundColor: "#E0F7FA", // Светлый голубой фон
+        }}
+    >
+      <Icon28FavoriteOutline
+          style={{
+            color: "#00B0FF",
+            backgroundColor: "#B3E5FC",
+            borderRadius: "50%",
+          }}
+          width={32}
+          height={32}
+      />
+      <Div style={{ marginLeft: "10px" }}>
+        <div style={{ fontSize: "24px", fontWeight: "bold", color: "#0288D1" }}>
+          Мой ребенок
+        </div>
+        <div style={{ fontSize: "18px", color: "#0277BD" }}>О сервисе</div>
+      </Div>
     </Div>
-  </Div>
 );
 
-// eslint-disable-next-line react/prop-types
+// Главный компонент
 export const Home = ({ id }) => {
-  const [activeTab, setActiveTab] = useState("leisure"); // Активная вкладка
-  const [filters, setFilters] = useState({}); // Фильтры
-  const [favorites, setFavorites] = useState(() => {
-    // Инициализация favorites из localStorage
-    const savedFavorites = localStorage.getItem("favorites");
-    return savedFavorites ? JSON.parse(savedFavorites) : [];
+  const [activeTab, setActiveTab] = useState("recommendations");
+  const [filters, setFilters] = useState({});
+  const [favorites, setFavorites] = useState([]);
+  const [myCircles, setMyCircles] = useState(() => {
+    const savedCircles = localStorage.getItem("myCircles");
+    return savedCircles ? JSON.parse(savedCircles) : [];
   });
-  const [showFavorites, setShowFavorites] = useState(false); // Показать только избранное
-  const [activeEvent, setActiveEvent] = useState(null); // Активное событие (для модалки)
-  const [showFilterMenu, setShowFilterMenu] = useState(false); // Показать меню фильтров
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
-  const currentPlatform = platform(); // Определяем платформу
+  const currentPlatform = platform();
 
   const getFavoritesFromServer = async (vkId) => {
     try {
@@ -131,34 +118,50 @@ export const Home = ({ id }) => {
     } else {
       sendFavoritesToServer([0]);
     }
-  }, [favorites]); // Вызываем, когда favorites изменяется
+  }, [favorites]);
 
-  // Обработка избранного
+  useEffect(() => {
+    localStorage.setItem("myCircles", JSON.stringify(myCircles));
+  }, [myCircles]);
+
   const toggleFavorite = (eventId) => {
     setFavorites((prevFavorites) =>
-      prevFavorites.includes(eventId)
-        ? prevFavorites.filter((id) => id !== eventId)
-        : [...prevFavorites, eventId]
+        prevFavorites.includes(eventId)
+            ? prevFavorites.filter((id) => id !== eventId)
+            : [...prevFavorites, eventId]
     );
   };
 
-  // Применение фильтров
-  const filteredEvents = events[activeTab].filter((event) => {
-    const isFavorite = favorites.includes(event.id);
+  const addToMyCircles = (event) => {
+    if (!myCircles.some((circle) => circle.id === event.id)) {
+      setMyCircles([...myCircles, event]);
+    }
+  };
 
-    // Проверяем, если хотя бы один активный фильтр совпадает с категорией мероприятия
-    const matchesFilters = Object.entries(filters).some(
-      ([key, value]) => value && event.category === key
+  const removeFromMyCircles = (eventId) => {
+    setMyCircles((prevCircles) =>
+        prevCircles.filter((circle) => circle.id !== eventId)
     );
+  };
 
-    // Возвращаем мероприятия, которые либо совпадают по фильтрам, либо находятся в избранном
-    return (
-      (!showFavorites || isFavorite) &&
-      (matchesFilters || Object.values(filters).every((value) => !value))
-    );
-  });
 
-  // Обработка фильтров
+
+  const filteredEvents =
+      activeTab === "favorites"
+          ? events.leisure
+              .concat(events.places, events.development)
+              .filter((event) => favorites.includes(event.id))
+          : events.leisure
+              .concat(events.places, events.development)
+              .filter((event) => {
+                const matchesFilters = Object.entries(filters).some(
+                    ([key, value]) => value && event.category === key
+                );
+                return (
+                    matchesFilters || Object.values(filters).every((value) => !value)
+                );
+              });
+
   const toggleFilter = (filterKey) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
@@ -166,214 +169,310 @@ export const Home = ({ id }) => {
     }));
   };
 
-  // // Очистка избранного(old)
-  // const clearFavorites = () => {
-  //   localStorage.removeItem("favorites");
-  //   setFavorites([]);
-  // };
-
-  // Модальное окно
-  const modal = (
-    <ModalRoot
-      activeModal={activeEvent ? "eventDetails" : null}
-      onClose={() => setActiveEvent(null)}
-      style={{ zIndex: 1000 }}
-    >
-      {activeEvent && (
-        <ModalPage
-          id="eventDetails"
-          onClose={() => setActiveEvent(null)}
-          header={
-            <ModalPageHeader
-              left={
-                currentPlatform === "android" && (
-                  <PanelHeaderButton onClick={() => setActiveEvent(null)}>
-                    <Icon24Dismiss />
-                  </PanelHeaderButton>
-                )
-              }
-              right={
-                currentPlatform === "ios" && (
-                  <PanelHeaderButton onClick={() => setActiveEvent(null)}>
-                    <Icon28CancelOutline />
-                  </PanelHeaderButton>
-                )
-              }
-            >
-              <h3 style={{ fontSize: "23px", fontStyle: "italic", margin: 0 }}>
-                {activeEvent.title}
-              </h3>
-            </ModalPageHeader>
-          }
-          style={{ zIndex: 1001 }}
-        >
-          <Div>
-            <img
-              src={activeEvent.image}
-              alt={activeEvent.title}
-              style={{
-                width: "100%",
-                borderRadius: "8px",
-                marginBottom: "16px",
-              }}
-            />
-            <h4>Общая информация:</h4>
-            <p>{activeEvent.description}</p>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <h4 style={{ margin: 0, marginRight: "8px" }}>Дата:</h4>
-              <p style={{ margin: 0 }}>{activeEvent.date}</p>
-            </div>
-          </Div>
-        </ModalPage>
-      )}
-    </ModalRoot>
-  );
-
   return (
-    <Panel id={id}>
-      {/* Блок "о сервисе" */}
-      <ServiceInfo />
-      {modal}
-      {/* Вкладки */}
-      <Tabs>
-        <TabsItem
-          onClick={() => setActiveTab("leisure")}
-          selected={activeTab === "leisure"}
-        >
-          Досуг
-        </TabsItem>
-        <TabsItem
-          onClick={() => setActiveTab("places")}
-          selected={activeTab === "places"}
-        >
-          Места
-        </TabsItem>
-        <TabsItem
-          onClick={() => setActiveTab("development")}
-          selected={activeTab === "development"}
-        >
-          Развитие
-        </TabsItem>
-      </Tabs>
+      <Panel id={id}>
+        <ServiceInfo />
+        <Tabs>
+          <TabsItem
+              onClick={() => setActiveTab("recommendations")}
+              selected={activeTab === "recommendations"}
+              style={{ fontSize: "18px", padding: "18px" }}
+          >
+            <div style={{ fontSize: "20px" }}>Рекомендации</div>
+          </TabsItem>
+          <TabsItem
+              onClick={() => setActiveTab("favorites")}
+              selected={activeTab === "favorites"}
+              style={{ fontSize: "18px", padding: "18px" }}
+          >
+            <div style={{ fontSize: "20px" }}>Избранное</div>
+          </TabsItem>
+          <TabsItem
+              onClick={() => setActiveTab("collections")}
+              selected={activeTab === "collections"}
+              style={{ fontSize: "18px", padding: "18px" }}
+          >
+            <div style={{ fontSize: "20px" }}>Подборки</div>
+          </TabsItem>
+          <TabsItem
+              onClick={() => setActiveTab("myCircles")}
+              selected={activeTab === "myCircles"}
+              style={{ fontSize: "18px", padding: "18px" }}
+          >
+            <div style={{ fontSize: "20px" }}>Мои кружки</div>
+          </TabsItem>
+        </Tabs>
 
-      {/* Кнопки для показа меню фильтров и избранного */}
-      <Div style={{ display: "flex", justifyContent: "space-between" }}>
-        <Button
-          mode="primary"
-          onClick={() => setShowFilterMenu((prev) => !prev)}
-          style={{ margin: "10px 0" }}
-          before={<Icon24Filter />}
-        >
-          Фильтр
-        </Button>
-        <Button
-          mode={showFavorites ? "primary" : "secondary"}
-          onClick={() => setShowFavorites((prev) => !prev)}
-          style={{ margin: "10px 0" }}
-          before={<Icon24Favorite />}
-        >
-          {showFavorites ? "Показать все" : "Показать избранное"}
-        </Button>
-      </Div>
-
-      {/* Меню фильтров */}
-      {showFilterMenu && (
-        <Group header={<Header mode="secondary">Фильтры</Header>}>
-          <Div>
-            <Checkbox
-              onChange={() => toggleFilter("творчество")}
-              checked={!!filters["творчество"]}
-            >
-              Творчество
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("история")}
-              checked={!!filters["история"]}
-            >
-              История
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("культура")}
-              checked={!!filters["культура"]}
-            >
-              Культура
-            </Checkbox>
-            <Checkbox
-              onChange={() => toggleFilter("образование")}
-              checked={!!filters["образование"]}
-            >
-              Образование
-            </Checkbox>
-          </Div>
-        </Group>
-      )}
-      {/* События */}
-      <Group header={<Header mode="secondary">События</Header>}>
-        {filteredEvents.length > 0 ? (
-          filteredEvents.map((event) => (
-            <Card key={event.id} style={{ margin: "8px 0" }}>
-              <SimpleCell
-                before={
-                  <Avatar
-                    src={event.image}
-                    style={{
-                      width: "300px",
-                      height: "200px",
-                      borderRadius: "12px",
-                    }}
-                  />
-                }
-                description={event.date}
-                after={
-                  <Button
-                    mode="tertiary"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleFavorite(event.id);
-                    }}
-                  >
-                    {favorites.includes(event.id) ? (
-                      <Icon28Favorite fill="light_blue" />
-                    ) : (
-                      <Icon28FavoriteOutline />
-                    )}
-                  </Button>
-                }
-              >
-                <div
-                  style={{
-                    fontSize: "24px",
-                    fontStyle: "italic",
-                    fontFamily: "'Lato', sans-serif",
-                    lineHeight: "1.3",
-                  }}
-                >
-                  {event.title}
-                </div>
-                <div
-                  style={{ fontSize: "16px", color: "#888", marginTop: "8px" }}
-                >
-                  <div>{event.location}</div>
-                  <div>{event.date}</div>
-                </div>
-                {/* Кнопка "Подробнее" */}
+        {activeTab === "recommendations" && (
+            <>
+              <Div style={{ display: "flex", justifyContent: "space-between" }}>
                 <Button
-                  size="m"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActiveEvent(event);
-                  }}
-                  style={{ marginTop: "10px" }}
+                    mode="primary"
+                    onClick={() => setShowFilterMenu((prev) => !prev)}
+                    style={{ margin: "10px 0" }}
+                    before={<Icon24Filter />}
                 >
-                  Подробнее
+                  Фильтр
                 </Button>
-              </SimpleCell>
-            </Card>
-          ))
-        ) : (
-          <Div>Нет событий, соответствующих фильтрам</Div>
+              </Div>
+
+              {showFilterMenu && (
+                  <Group header={<Header mode="secondary">Фильтры</Header>}>
+                    <Div>
+                      <Checkbox
+                          onChange={() => toggleFilter("творчество")}
+                          checked={!!filters["творчество"]}
+                      >
+                        Творчество
+                      </Checkbox>
+                      <Checkbox
+                          onChange={() => toggleFilter("история")}
+                          checked={!!filters["история"]}
+                      >
+                        История
+                      </Checkbox>
+                      <Checkbox
+                          onChange={() => toggleFilter("культура")}
+                          checked={!!filters["культура"]}
+                      >
+                        Культура
+                      </Checkbox>
+                      <Checkbox
+                          onChange={() => toggleFilter("образование")}
+                          checked={!!filters["образование"]}
+                      >
+                        Образование
+                      </Checkbox>
+                    </Div>
+                  </Group>
+              )}
+
+              <Group header={<Header mode="secondary">События</Header>}>
+                {filteredEvents.length > 0 ? (
+                    filteredEvents.map((event) => (
+                        <Card key={event.id} style={{ margin: "8px 0", position: "relative", padding: "16px" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start" }}>
+                            {/* Фото события */}
+                            <Avatar
+                                src={event.image}
+                                style={{
+                                  width: "300px",
+                                  height: "200px",
+                                  borderRadius: "12px",
+                                  marginRight: "16px",
+                                }}
+                            />
+
+                            {/* Основной текстовый блок */}
+                            <div style={{ flex: 1 }}>
+                              {/* Категория события */}
+                              <div
+                                  style={{
+                                    fontSize: "11px", // 11pt
+                                    fontFamily: "SF Pro Text",
+                                    fontWeight: "600", // Semibold
+                                    color: "#818C99", // Светло-серый цвет
+                                    textTransform: "uppercase", // Caps
+                                    marginBottom: "4px",
+                                  }}
+                              >
+                                {event.category}
+                              </div>
+
+                              {/* Название события */}
+                              <div
+                                  style={{
+                                    fontSize: "24px", // Обычный размер текста
+                                    fontFamily: "SF Text Regular", // Шрифт
+                                    fontWeight: "400", // Regular
+                                    marginBottom: "8px",
+                                  }}
+                              >
+                                {event.title}
+                              </div>
+
+                              {/* Описание события */}
+                              <div
+                                  style={{
+                                    fontSize: "18px", // Обычный размер текста
+                                    fontFamily: "SF Pro Text", // Шрифт
+                                    fontWeight: "400", // Regular
+                                    color: "#000000",
+                                    marginBottom: "16px",
+                                  }}
+                              >
+                                {event.description}
+                              </div>
+
+                              {/* Информация о цене, днях занятий и месте */}
+                              <div
+                                  style={{
+                                    position: "absolute",
+                                    bottom: "10px",
+                                    left: "325px",
+                                  }}
+                              >
+                                <div
+                                    style={{
+                                      fontSize: "14px", // SF Caption 1 Regular
+                                      fontFamily: "SF Caption 1 Regular",
+                                      fontWeight: "400",
+                                      color: "#818C99", // Светло-серый цвет
+                                    }}
+                                >
+                                  {event.price} ₽
+                                </div>
+                                <div
+                                    style={{
+                                      fontSize: "14px", // SF Caption 1 Regular
+                                      fontFamily: "SF Pro Text",
+                                      fontWeight: "400",
+                                      color: "#818C99", // Светло-серый цвет
+                                    }}
+                                >
+                                  {event.schedule} {event.location}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Иконка избранного в правом верхнем углу */}
+                          <div style={{ position: "absolute", top: "10px", right: "10px" }}>
+                            <Button
+                                mode="tertiary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleFavorite(event.id);
+                                }}
+                            >
+                              {favorites.includes(event.id) ? (
+                                  <Icon28Favorite fill="light_blue" />
+                              ) : (
+                                  <Icon28FavoriteOutline />
+                              )}
+                            </Button>
+                          </div>
+
+                          {/* Кнопка "Записаться" в правом нижнем углу */}
+                          <div style={{ position: "absolute", bottom: "10px", right: "10px" }}>
+                            <Button
+                                size="m"
+                                style={{
+                                  fontSize: "14px", // SF Caption 1 Regular
+                                  fontFamily: "SF Caption 1 Regular",
+                                  fontWeight: "400",
+                                }}
+                                onClick={() =>
+                                    myCircles.some((circle) => circle.id === event.id)
+                                        ? removeFromMyCircles(event.id)
+                                        : addToMyCircles(event)
+                                }
+                            >
+                              {myCircles.some((circle) => circle.id === event.id)
+                                  ? "Вы записаны"
+                                  : "Записаться"}
+                            </Button>
+                          </div>
+                        </Card>
+                    ))
+                ) : (
+                    <Div>Нет событий, соответствующих фильтрам</Div>
+                )}
+              </Group>
+
+
+
+
+
+
+            </>
         )}
-      </Group>
-    </Panel>
+
+        {activeTab === "favorites" && (
+            <Group header={<Header mode="secondary">Избранные события</Header>}>
+              {favorites.length > 0 ? (
+                  events.leisure
+                      .concat(events.places, events.development)
+                      .filter((event) => favorites.includes(event.id))
+                      .map((event) => (
+                          <Card key={event.id} style={{ margin: "8px 0" }}>
+                            <SimpleCell
+                                before={
+                                  <Avatar
+                                      src={event.image}
+                                      style={{
+                                        width: "300px",
+                                        height: "200px",
+                                        borderRadius: "12px",
+                                      }}
+                                  />
+                                }
+                                description={event.date}
+                            >
+                              <div style={{ fontSize: "24px" }}>{event.title}</div>
+                              <Button
+                                  size="m"
+                                  mode="destructive"
+                                  onClick={() => toggleFavorite(event.id)}
+                                  style={{ marginTop: "10px" }}
+                              >
+                                Удалить из избранного
+                              </Button>
+                            </SimpleCell>
+                          </Card>
+                      ))
+              ) : (
+                  <Div>У вас нет избранных событий.</Div>
+              )}
+            </Group>
+        )}
+
+        {activeTab === "myCircles" && (
+            <Group header={<Header mode="secondary">Мои кружки</Header>}>
+              {myCircles.length > 0 ? (
+                  myCircles.map((circle) => (
+                      <Card key={circle.id} style={{ margin: "8px 0" }}>
+                        <SimpleCell
+                            before={
+                              <Avatar
+                                  src={circle.image}
+                                  style={{
+                                    width: "300px",
+                                    height: "200px",
+                                    borderRadius: "12px",
+                                  }}
+                              />
+                            }
+                            description={circle.date}
+                        >
+                          <div
+                              style={{
+                                fontSize: "24px",
+                                fontStyle: "italic",
+                                marginBottom: "10px",
+                              }}
+                          >
+                            {circle.title}
+                          </div>
+                          <Button
+                              size="m"
+                              mode="destructive"
+                              onClick={() => removeFromMyCircles(circle.id)}
+                              style={{
+                                marginTop: "10px",
+                                backgroundColor: "#FFCDD2",
+                              }}
+                          >
+                            Удалить из моих кружков
+                          </Button>
+                        </SimpleCell>
+                      </Card>
+                  ))
+              ) : (
+                  <Div>У вас нет кружков.</Div>
+              )}
+            </Group>
+        )}
+      </Panel>
   );
 };

@@ -93,12 +93,12 @@ def add_entry_ids():
         cursor = conn.cursor()
 
         # Удаляем старые записи для данного vk_id
-        cursor.execute('DELETE FROM favorites WHERE vk_id = ?', (vk_id,))
+        cursor.execute('DELETE FROM entry WHERE vk_id = ?', (vk_id,))
         conn.commit()
 
         # Вставляем новые entry_ids для данного vk_id
         cursor.executemany('''
-            INSERT INTO favorites (entry_id, vk_id)
+            INSERT INTO entry (entry_id, vk_id)
             VALUES (?, ?)
         ''', [(entry_id, vk_id) for entry_id in entry_ids])
         conn.commit()
@@ -125,7 +125,7 @@ def get_event_ids(vk_id):
 def get_entry_ids(vk_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT entry_id FROM favorites WHERE vk_id = ?', (vk_id,))
+    cursor.execute('SELECT entry_id FROM entry WHERE vk_id = ?', (vk_id,))
     entry_ids = [row[0] for row in cursor.fetchall()]
     conn.close()
 
