@@ -55,10 +55,7 @@ export const Home = ({ id }) => {
   const [activeTab, setActiveTab] = useState("recommendations");
   const [filters, setFilters] = useState({});
   const [favorites, setFavorites] = useState([]);
-  const [myCircles, setMyCircles] = useState(() => {
-    const savedCircles = localStorage.getItem("myCircles");
-    return savedCircles ? JSON.parse(savedCircles) : [];
-  });
+  const [myCircles, setMyCircles] = useState([]);
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const currentPlatform = platform();
@@ -120,9 +117,100 @@ export const Home = ({ id }) => {
     }
   }, [favorites]);
 
+  const getMyCirclesFromServer = async (vkId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/get_entry_ids/${vkId}`, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Мои круги (entry):", data);
+
+        const entryIds = data.event_ids || [];
+        const restoredCircles = entryIds.map((id) => {
+          const event = findEventById(id);  // Ищем событие по ID только в категории leisure
+          return event ? event : null;  // Если событие найдено, возвращаем его, иначе null
+        });
+
+        setMyCircles(restoredCircles.filter((event) => event !== null));  // Отфильтровываем null
+      } else {
+        console.error("Ошибка при получении данных myCircles с сервера");
+      }
+    } catch (error) {
+      console.error("Ошибка при запросе myCircles с сервера:", error);
+    }
+  };
+
+
+// Пример функции для поиска объекта мероприятия по ID
+  const findEventById = (id) => {
+    // Для поиска по всем категориям, проходим по всем ключам в объекте `events`
+    for (const category in events) {
+      if (Array.isArray(events[category])) {
+        const event = events[category].find(event => event.id === id); // Ищем по ID в каждой категории
+        if (event) {
+          return event; // Возвращаем найденное событие
+        }
+      }
+    }
+    return null; // Возвращаем null, если не нашли событие
+  };
+
+
+
+  // Функция для отправки кругов (entry) на сервер
+  const sendMyCirclesToServer = async (circles) => {
+    try {
+      // Извлекаем только id из объектов myCircles
+
+      const circleIds = circles.map((circle) => circle.id);
+
+      const response = await fetch('http://127.0.0.1:5000/add_entry_ids', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ entry_ids: circleIds, vk_id: "@aboba" }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Круги (entry) успешно отправлены:", data.message);
+      } else {
+        console.error("Ошибка при отправке данных myCircles на сервер");
+      }
+    } catch (error) {
+      console.error("Ошибка при отправке данных myCircles на сервер:", error);
+    }
+  };
+
+// Синхронизация изменений myCircles с сервером
   useEffect(() => {
-    localStorage.setItem("myCircles", JSON.stringify(myCircles));
+    if (myCircles.length > 0) {
+      sendMyCirclesToServer(myCircles); // Отправляем список объектов, из которых берется только id
+    } else {
+      sendMyCirclesToServer([{ id: 0, category: "none", date: "N/A", description: "No circles selected", image: "N/A", location: "N/A", title: "No Events" }]); // Отправляем пустой массив, если список пуст
+    }
   }, [myCircles]);
+
+
+
+  // Загрузка данных при монтировании компонента
+  useEffect(() => {
+    const vkId = "@aboba";
+    getMyCirclesFromServer(vkId);
+  }, []);
+
+  // Синхронизация изменений favorites с сервером
+  useEffect(() => {
+    if (favorites.length > 0) {
+      sendFavoritesToServer(favorites);
+    } else {
+      sendFavoritesToServer([0]); // Отправляем пустую запись, если список пуст
+    }
+  }, [favorites]);
+
 
   const toggleFavorite = (eventId) => {
     setFavorites((prevFavorites) =>
